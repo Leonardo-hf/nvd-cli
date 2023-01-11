@@ -55,10 +55,10 @@ def search(id, key, date, cwe, cvss, num, csv, api):
                     err('E.The interval between the two dates should be less than 120 days.')
             except ValueError:
                 err('Time input is wrong, the correct format is such as \'0\', \'2000-01-01\'')
-        if num == -1:
-            num = None
         if num > 2000:
             err('The maximum of number is 2000, is you want to find more CVEs, use \'-1\' to see all.')
+        if num == -1:
+            num = None
         cves = nvdlib.searchCVE(keywordSearch=key, cvssV3Severity=cvss, cweId=cwe, limit=num,
                                 pubStartDate=start, pubEndDate=end, key=api)
         for cve in cves:
