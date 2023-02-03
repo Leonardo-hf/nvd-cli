@@ -64,7 +64,6 @@ def search(id, key, date, cwe, cvss, cvss2, num, csv, api):
                     start = next_start
             except ValueError:
                 err('Time input is wrong, the correct format is such as \'0\', \'2000-01-01\'')
-        print(time_range)
         for start, end in time_range:
             limit = None
             if 0 < num - len(cves) < 2000:
@@ -107,6 +106,8 @@ def parse(cve):
     cwe = ','.join(map(lambda a: a.value, getattr(cve, 'cwe', [])))
     references = ','.join(map(lambda a: a.url, getattr(cve, 'references', [])))
     cpe = ','.join(map(lambda a: a.criteria, getattr(cve, 'cpe', [])))
+    if str(desc).startswith('** REJECT **'):
+        return []
     res = []
     for ed in list(filter(lambda ed: getattr(cve, '{}score'.format(ed), ''), score_eds)):
         res.append(
