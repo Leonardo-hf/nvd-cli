@@ -109,7 +109,7 @@ def parse(cve):
     cpe = ','.join(map(lambda a: a.criteria, getattr(cve, 'cpe', [])))
     res = []
     for ed in list(filter(lambda ed: getattr(cve, '{}score'.format(ed), ''), score_eds)):
-        res.append(.
+        res.append(
             (cve.id, cwe, desc, getattr(cve, '{}score'.format(ed), ''), getattr(cve, '{}severity'.format(ed), ''),
              getattr(cve, '{}vector'.format(ed), ''), ed, references, cpe, getattr(cve, 'published', '')))
     if len(res) == 0:
