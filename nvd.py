@@ -88,6 +88,7 @@ def search(id, key, date, cwe, cvss, cvss2, num, csv, api):
         click.echo(table[:min(10, len(rows))])
         if csv and csv.tell():
             for row in rows:
+                row = list(map(lambda x: str(x), row))
                 for i in (1, 2, 6, 7, 8):
                     row[i] = "\"{}\"".format(row[i])
                 csv.write(','.join(row) + '\n')
@@ -103,11 +104,11 @@ score_eds = ['v2', 'v3', 'v31']
 
 def parse(cve):
     desc = cve.descriptions[0].value
+    if str(desc).startswith('** REJECT **'):
+        return []
     cwe = ','.join(map(lambda a: a.value, getattr(cve, 'cwe', [])))
     references = ','.join(map(lambda a: a.url, getattr(cve, 'references', [])))
     cpe = ','.join(map(lambda a: a.criteria, getattr(cve, 'cpe', [])))
-    if str(desc).startswith('** REJECT **'):
-        return []
     res = []
     for ed in list(filter(lambda ed: getattr(cve, '{}score'.format(ed), ''), score_eds)):
         res.append(
