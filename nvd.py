@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import click
 import nvdlib
 import prettytable
+from tqdm import tqdm
 
 
 @click.command()
@@ -36,9 +37,13 @@ def search(id, key, date, cwe, cvss, cvss2, num, csv, api):
     cves = []
     if id:
         crt_cves = nvdlib.searchCVE(cveId=id, key=api)
-        if len(cves):
+        if len(crt_cves):
             cves.append(crt_cves[0])
     else:
+        proc_size = None
+        if num > 0:
+            proc_size = num
+        proc = tqdm(desc='Have found', total=proc_size)
         if key:
             key = key.replace('+', ' ')
         if cwe and re.match(r'\d+', cwe):
@@ -73,33 +78,33 @@ def search(id, key, date, cwe, cvss, cvss2, num, csv, api):
             crt_cves = nvdlib.searchCVE(keywordSearch=key, cvssV3Severity=cvss, cvssV2Severity=cvss2, cweId=cwe,
                                         limit=limit,
                                         pubStartDate=start, pubEndDate=end, key=api)
+            proc.update(len(crt_cves))
             cves.extend(crt_cves)
         if num > 0:
             cves = cves[:num]
+        proc.close()
     for cve in cves:
         for r in parse(cve):
             table.add_row(r)
-
     rows = table.rows
-    if len(rows):
-        click.echo('A total of {} CVEs were found'.format(len(cves)))
-        if len(rows) > 10:
-            click.echo('There are only up to ten lines shown here, if you need to see more, use --csv')
-        click.echo(table[:min(10, len(rows))])
-        if csv and csv.tell():
-            for row in rows:
-                row = list(map(lambda x: str(x), row))
-                for i in (1, 2, 6, 7, 8):
-                    row[i] = "\"{}\"".format(row[i])
-                csv.write(','.join(row) + '\n')
-        elif csv:
-            csv.write(table.get_csv_string())
-        click.pause()
-        return
-    err('No results found under restrictions')
+    if not len(rows):
+        err('No results found under restrictions')
+    click.echo('A total of {} CVEs were found'.format(len(cves)))
+    if len(rows) > 10:
+        click.echo('There are only up to ten lines shown here, if you need to see more, use --csv')
+    click.echo(table[:min(10, len(rows))])
+    if csv and csv.tell():
+        for row in rows:
+            row = list(map(lambda x: str(x), row))
+            for i in (1, 2, 6, 7, 8):
+                row[i] = "\"{}\"".format(row[i])
+            csv.write(','.join(row) + '\n')
+    elif csv:
+        csv.write(table.get_csv_string())
+    click.pause()
 
 
-score_eds = ['v2', 'v3', 'v31']
+score_eds = ['v2', 'v30', 'v31']
 
 
 def parse(cve):
